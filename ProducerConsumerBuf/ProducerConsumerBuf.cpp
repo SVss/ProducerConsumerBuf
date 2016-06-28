@@ -2,7 +2,7 @@
 
 using namespace std;
 
-static queue<string> buffer;		// реализация с бесконечным буферром на очереди
+static queue<string> buffer;		// infinite buffer on std::queue
 static mutex bufferMutex;
 static bool isEndOfInput = false;
 
@@ -14,6 +14,7 @@ void produce(ifstream *input)
 	while (!input->eof())
 	{
 		getline( (*input), str);
+//		cout << str << endl;
 
 		bufferMutex.lock();
 		buffer.push(str);
@@ -43,34 +44,45 @@ void consume(ofstream *output)
 	}
 }
 
-int main(int argc, _TCHAR* argv[])
+int main(int argc, char* argv[])
 {
-	if (argc < 3) {
+	if (argc < 2) {
 		cerr << "Not enough arguments" << endl;
 		return -1;
 	}
 
-	ifstream inputFile(argv[1]);
+	char *inName = argv[1];
+
+	ifstream inputFile(inName);
 	if(!inputFile.good() )
 	{
 		cerr << "Can't open input file"  << endl;
 		return -1;
 	}
 
-	ofstream outputFile(argv[2]);
+
+	char *outName = "out.txt";
+	if (argc > 2)
+	{
+		outName = argv[2];
+	}
+
+	ofstream outputFile(outName);
 	if(!outputFile.good() )
 	{
 		cerr << "Can't open output file"  << endl;
 		return -1;
 	}
 
+
 	thread prod(produce, &inputFile);
 	thread cons(consume, &outputFile);
 
-	prod.join();
-	cons.join();
 
+	prod.join();
 	inputFile.close();
+
+	cons.join();
 	outputFile.close();
 
 	return 0;
